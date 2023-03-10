@@ -33,13 +33,13 @@ func CreateUser(c *gin.Context) {
 	}
 
 	// insert validated json
-	client, err := db.GetMongoClient()
-
+	coll, err := db.GetUserColl()
 	if err != nil {
 		c.String(http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
-	_, err = client.Database("mongogin-prod").Collection(string(db.Users)).InsertOne(context.TODO(), user)
+
+	_, err = coll.InsertOne(context.TODO(), user)
 	if err != nil {
 		c.String(http.StatusInternalServerError, "Internal Server Error")
 		return
@@ -50,21 +50,24 @@ func CreateUser(c *gin.Context) {
 
 func GetAllUsers(c *gin.Context) {
 	// get client
-	client, err := db.GetMongoClient()
+	coll, err := db.GetUserColl()
 	if err != nil {
 		c.String(http.StatusInternalServerError, "Internal Server Error")
+		return
 	}
 
 	// get cursor
-	cursor, err := client.Database("mongogin-prod").Collection(string(db.Users)).Find(context.TODO(), bson.D{})
+	cursor, err := coll.Find(context.TODO(), bson.D{})
 	if err != nil {
 		c.String(http.StatusInternalServerError, "Internal Server Error")
+		return
 	}
 
-	// decodes cursor into results
+	// decode cursor into results
 	var results []User
 	if err = cursor.All(context.TODO(), &results); err != nil {
-		panic(err)
+		c.String(http.StatusInternalServerError, "Internal Server Error")
+		return
 	}
 
 	// returns values
