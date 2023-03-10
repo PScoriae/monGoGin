@@ -13,18 +13,7 @@ func setupRouter() *gin.Engine {
 	users := r.Group("/users")
 
 	{
-		// users.GET("", func(c *gin.Context) {
-		// 	cursor, err := db.Users.Find(context.TODO(), bson.D{})
-		// 	if err != nil {
-		// 		panic(err)
-		// 	}
-
-		// 	var results []User
-		// 	if err = cursor.All(context.TODO(), &results); err != nil {
-		// 		panic(err)
-		// 	}
-		// 	c.JSON(http.StatusOK, results)
-		// })
+		users.GET("", handlers.GetAllUsers)
 
 		users.POST("", handlers.CreateUser)
 

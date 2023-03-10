@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -19,17 +20,19 @@ type User struct {
 }
 
 func CreateUser(c *gin.Context) {
-	// validation
+	// prefill user object
 	user := User{
 		ID:        primitive.NewObjectID(),
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
+	// validation
 	if err := c.ShouldBindJSON(&user); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
+	// insert validated json
 	client, err := db.GetMongoClient()
 
 	if err != nil {
@@ -43,4 +46,27 @@ func CreateUser(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, user)
+}
+
+func GetAllUsers(c *gin.Context) {
+	// get client
+	client, err := db.GetMongoClient()
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Internal Server Error")
+	}
+
+	// get cursor
+	cursor, err := client.Database("mongogin-prod").Collection(string(db.Users)).Find(context.TODO(), bson.D{})
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Internal Server Error")
+	}
+
+	// decodes cursor into results
+	var results []User
+	if err = cursor.All(context.TODO(), &results); err != nil {
+		panic(err)
+	}
+
+	// returns values
+	c.JSON(http.StatusOK, results)
 }
