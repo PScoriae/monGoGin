@@ -11,6 +11,9 @@
 tmp
 .vscode
 
+# Output binaries
+bin/**
+
 # Test binary, built with `go test -c`
 *.test
 
