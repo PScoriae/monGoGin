@@ -9,10 +9,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type User struct {
-	ID        primitive.ObjectID `bson:"_id"`
+	ID        primitive.ObjectID `json:"id" bson:"_id"`
 	Email     string             `json:"email" bson:"email" binding:"required,email"`
 	Name      string             `json:"name" bson:"name" binding:"required"`
 	Age       int                `json:"age" bson:"age" binding:"required"`
@@ -78,4 +79,34 @@ func GetAllUsers(c *gin.Context) {
 
 	// returns values
 	c.JSON(http.StatusOK, results)
+}
+
+func GetUsersById(c *gin.Context) {
+	// get MongoDB Object ID from param
+	id := c.Param("id")
+	objId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		c.String(http.StatusNotFound, "No user with that ID")
+		return
+	}
+
+	// get user collection
+	coll, err := db.GetUserColl()
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Internal Server Error")
+		return
+	}
+
+	// query for user id
+	var result User
+	if err = coll.FindOne(context.TODO(), bson.D{{Key: "_id", Value: objId}}).Decode(&result); err != nil {
+		if err == mongo.ErrNoDocuments {
+			c.String(http.StatusNotFound, "No user with that ID")
+			return
+		}
+		c.String(http.StatusInternalServerError, "Internal Server Error")
+		return
+	}
+
+	c.JSON(http.StatusAccepted, result)
 }

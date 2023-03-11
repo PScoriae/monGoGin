@@ -17,21 +17,9 @@ func setupRouter() *gin.Engine {
 
 		users.POST("", handlers.CreateUser)
 
-		// // Get users by ID
-		// users.GET("/:id", func(c *gin.Context) {
-		// 	id, err := strconv.Atoi(c.Param("id"))
-		// 	if err != nil {
-		// 		c.String(http.StatusInternalServerError, "Internal Server Error")
-		// 	}
-		// 	for _, person := range persons {
-		// 		if person.ID == id {
-		// 			c.JSON(http.StatusOK, person)
-		// 			return
-		// 		}
-		// 	}
-		// 	c.JSON(http.StatusNotFound, gin.H{"message": "No such person"})
-		// })
+		users.GET("/:id", handlers.GetUsersById)
 	}
+
 	// Ping test
 	r.GET("/ping", func(c *gin.Context) {
 		c.String(http.StatusOK, "pong")
