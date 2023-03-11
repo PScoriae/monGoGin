@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"errors"
 	"sync"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -13,6 +14,18 @@ const uri = "mongodb://localhost:3500/mongogin-db"
 var MongoClient *mongo.Client
 var MongoClientError error
 var mongoOnce sync.Once
+
+func IsDup(err error) bool {
+	var e mongo.WriteException
+	if errors.As(err, &e) {
+		for _, we := range e.WriteErrors {
+			if we.Code == 11000 {
+				return true
+			}
+		}
+	}
+	return false
+}
 
 func GetMongoClient() (*mongo.Client, error) {
 	mongoOnce.Do(func() {

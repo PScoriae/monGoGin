@@ -13,6 +13,7 @@ import (
 
 type User struct {
 	ID        primitive.ObjectID `bson:"_id"`
+	Email     string             `json:"email" bson:"email" binding:"required,email"`
 	Name      string             `json:"name" bson:"name" binding:"required"`
 	Age       int                `json:"age" bson:"age" binding:"required"`
 	CreatedAt time.Time          `json:"createdAt" bson:"created_at"`
@@ -21,13 +22,13 @@ type User struct {
 
 func CreateUser(c *gin.Context) {
 	// prefill user object
-	user := User{
+	user := &User{
 		ID:        primitive.NewObjectID(),
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
 	// validation
-	if err := c.ShouldBindJSON(&user); err != nil {
+	if err := c.ShouldBindJSON(user); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -39,8 +40,13 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	_, err = coll.InsertOne(context.TODO(), user)
+	_, err = coll.InsertOne(context.TODO(), *user)
 	if err != nil {
+		if db.IsDup(err) {
+			c.String(http.StatusBadRequest, "User with that email already exists")
+			return
+		}
+
 		c.String(http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
