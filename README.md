@@ -32,4 +32,4 @@
 
 ## About
 
-This is a work in progress, be sure to come back later!
+pretty much abandoned this lol
